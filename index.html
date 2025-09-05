@@ -1,478 +1,502 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CodeSpeakLearn — Master Machine Learning & English</title>
+  <meta name="description" content="CodeSpeakLearn — Practical Machine Learning & English bootcamps. Limited seats. Enroll now." />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --primary-blue:#2c3e50;
+      --secondary-blue:#34495e;
+      --accent-green:#27ae60;
+      --accent-orange:#e67e22;
+      --bg:#f6fafb;
+      --card:#ffffff;
+      --muted:#7f8c8d;
+      --glass: rgba(255,255,255,0.7);
+      --shadow-sm: 0 6px 18px rgba(2,6,23,0.06);
+      --shadow-md: 0 20px 40px rgba(2,6,23,0.12);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background:var(--bg);
+      color:var(--primary-blue);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.5;
+    }
 
-/**
- * CodeSpeakLearn — Mobile‑first, conversion‑optimized landing page
- * - TailwindCSS classes are used for styling
- * - Framer Motion adds subtle, high‑quality animations
- * - Sticky mobile CTA + fixed urgency banner
- * - Accessible FAQ accordion
- * - Lightweight and fast; no external UI libs required
- */
+    /* Urgency banner (sticky) */
+    .urgency {
+      position:sticky;
+      top:0;
+      z-index:90;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      background:linear-gradient(90deg,#ffb347,#ffcc33);
+      color:#2b2b2b;
+      font-weight:700;
+      box-shadow:var(--shadow-sm);
+      font-size:14px;
+    }
+    .urgency .pulse{width:10px;height:10px;border-radius:50%;background:white;box-shadow:0 0 8px rgba(255,255,255,0.7);animation:pulse 1.4s infinite}
+    @keyframes pulse{0%{transform:scale(.85);opacity:.9}50%{transform:scale(1.2);opacity:1}100%{transform:scale(.85);opacity:.9}}
 
-export default function CodeSpeakLearnLanding() {
-  // ======= Config =======
-  const WHATSAPP_NUMBER = "919969648284";
-  const UPI_ID = "anuppendse@oksbi";
-  const QR_SRC =
-    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiHYEbkdgFpsFFdopKQxZd3JOAxI6uhYiQUk_AhgjZUDiv3oHqIrwHGGgRsoi-KGaowGHMtj20OQ3HtkKfXJbsFqZTFXajfNyd_wy9Rb99mFjX-yECSGhePh1MNrz8k25nFt_o1IyMw48ORD0TjHPoarz0TFparWykSgUN1GhrZdwbvTlPAppF83yhI_OBq/s16000/WhatsApp%20Image%202025-09-04%20at%2012.58.39.jpeg";
-  const LOGO_SRC =
-    "https://codespeaklearn.com/wp-content/uploads/2025/02/CSL-Logos-e1739614479783.png";
+    /* Header / Hero */
+    header{padding:36px 20px 28px;background:linear-gradient(135deg,#f0f6ff 0%,#ffffff 100%);box-shadow:var(--shadow-sm);text-align:center}
+    .logo{height:56px;display:inline-block;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.08))}
+    h1{font-family:'Montserrat',sans-serif;font-size:clamp(1.6rem,3.6vw,2.6rem);margin:18px 0 6px;letter-spacing:-0.02em}
+    header p{font-family:'Roboto',sans-serif;color:var(--muted);margin:0;font-weight:600}
+    .hero-ctas{margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
-  // ======= Countdown logic (auto-rolls to the next suitable date) =======
-  const getNextBatchDate = () => {
-    // Primary announced date: 15 Sep 2025, 17:00 IST
-    const announced = new Date("2025-09-15T11:30:00Z"); // 17:00 IST = 11:30 UTC
-    const now = new Date();
-    if (announced > now) return announced;
-    // If passed, roll in 14‑day intervals at 17:00 IST from today
-    const base = new Date(now);
-    base.setUTCMinutes(30, 0, 0); // :30m for 17:00 IST
-    base.setUTCHours(11); // 17:00 IST
-    // Move ahead until it's a future date
-    while (base <= now) base.setUTCDate(base.getUTCDate() + 14);
-    return base;
-  };
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;border:0;padding:12px 16px;border-radius:12px;font-weight:800;cursor:pointer;text-decoration:none;
+      transition:transform .18s ease,box-shadow .18s ease;
+      box-shadow:0 8px 18px rgba(0,0,0,0.08);
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn-primary{background:var(--accent-green);color:white}
+    .btn-ghost{background:white;border:1px solid rgba(44,62,80,0.06);color:var(--secondary-blue)}
 
-  const targetDate = useMemo(() => getNextBatchDate(), []);
-  const [{ d, h, m, s, done }, setTick] = useState({ d: 0, h: 0, m: 0, s: 0, done: false });
+    main{max-width:1100px;margin:22px auto;padding:0 18px 60px}
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
-      if (distance <= 0) {
-        setTick({ d: 0, h: 0, m: 0, s: 0, done: true });
-        return;
-      }
-      const dd = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hh = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const mm = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const ss = Math.floor((distance % (1000 * 60)) / 1000);
-      setTick({ d: dd, h: hh, m: mm, s: ss, done: false });
-    }, 1000);
-    return () => clearInterval(id);
-  }, [targetDate]);
+    /* grid hero area */
+    .hero-grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:center}
+    @media(min-width:900px){.hero-grid{grid-template-columns:1fr 420px;gap:28px}}
 
-  // ======= Helpers =======
-  const scrollToPayment = () => {
-    document.getElementById("payment").scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+    /* Countdown card */
+    .count-card{background:linear-gradient(180deg,#fff7f0,#fffaf6);border:1px solid rgba(230,126,34,0.12);padding:20px;border-radius:14px;box-shadow:var(--shadow-md)}
+    .count-title{font-weight:800;color:var(--accent-orange);margin-bottom:12px}
+    .timer{display:flex;gap:12px;justify-content:center}
+    .timer .unit{min-width:64px;background:white;padding:10px;border-radius:12px;box-shadow:var(--shadow-sm);text-align:center}
+    .timer .number{font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.7rem;color:var(--accent-orange);letter-spacing:-0.03em}
+    .timer .label{color:#8f5d21;font-weight:700;font-size:12px;margin-top:6px;text-transform:uppercase}
 
-  // Track spots left (fake dynamic for urgency, can be wired to backend)
-  const [spotsLeft, setSpotsLeft] = useState(() => 19);
-  useEffect(() => {
-    const t = setInterval(() => {
-      setSpotsLeft((x) => (x > 7 ? x - 1 : x));
-    }, 15000);
-    return () => clearInterval(t);
-  }, []);
+    .spot-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+    .spot-left{font-weight:800;color:#b24f00}
+    .grab-btn{background:var(--accent-orange);color:white;padding:10px 12px;border-radius:10px;font-weight:800;border:0;cursor:pointer}
 
-  // ======= FAQ data =======
-  const faqs = [
-    {
-      q: "Where is your institute located?",
-      a: "C1-501, Aldea Espanola, Phase 3, Opposite Orchid Hotel, Baner-Mahanulge Road, Deolali, Pune 411045.",
-    },
-    {
-      q: "What is the detailed ML syllabus?",
-      a: "Intro to ML, Supervised Learning (Regression/Classification), Unsupervised Learning, Ensembles, Recommenders, and hands‑on projects in Python/Colab.",
-    },
-    { q: "Is prior coding required?", a: "Basic programming & maths help, but beginners get full support." },
-    { q: "Are batches online or offline?", a: "Both — with flexible, customizable schedules." },
-    { q: "How to register?", a: "Pay via UPI/QR, then send the payment screenshot on WhatsApp to confirm and get joining details." },
-    { q: "Do you offer mentorship/placement help?", a: "Yes — mentorship, project guidance, resume and interview prep." },
-    { q: "Can I reschedule?", a: "Yes, timings are flexible based on slot availability." },
-    {
-      q: "What does the English course cover?",
-      a: "Interview prep, spoken communication, job emails, CV building, and workplace English — in 10 days.",
-    },
-  ];
+    /* Courses */
+    .section{margin-top:28px}
+    .section h2{font-size:1.5rem;margin-bottom:8px}
+    .section p.lead{color:var(--muted);margin-top:6px;margin-bottom:14px;max-width:760px}
 
-  // ======= JSON‑LD (inline) =======
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Course",
-    name: "Machine Learning using Python",
-    description:
-      "Hands‑on ML with Python & Google Colab. Supervised/Unsupervised learning, Deep Learning overview, projects, interview prep.",
-    provider: {
-      "@type": "Organization",
-      name: "CodeSpeakLearn",
-      sameAs: "https://www.codespeaklearn.com",
-    },
-    hasCourseInstance: {
-      "@type": "CourseInstance",
-      name: "ML September Batch",
-      startDate: targetDate.toISOString(),
-      location: {
-        "@type": "Place",
-        name: "CodeSpeakLearn Pune",
-        address: "C1-501, Aldea Espanola, Phase 3, Opp Orchid Hotel, Baner-Mahanulge Rd, Pune 411045",
-      },
-      offers: {
-        "@type": "Offer",
-        price: "999",
-        priceCurrency: "INR",
-        availability: "https://schema.org/LimitedAvailability",
-      },
-    },
-  };
+    .courses{display:grid;gap:18px}
+    @media(min-width:860px){.courses{grid-template-columns:repeat(2,1fr)}}
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-emerald-100">
-      {/* Urgency banner (mobile‑first) */}
-      <div className="sticky top-0 z-50 w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-sm font-semibold md:text-base">
-          <span className="inline-flex items-center gap-2">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-white/90" />
-            Limited Seats • Next ML batch starts soon
+    .course-card{background:var(--card);border-radius:14px;padding:20px;border:1px solid #e6edf5;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:transform .22s ease,box-shadow .22s ease}
+    .course-card:hover{transform:translateY(-8px);box-shadow:var(--shadow-md)}
+    .badge{position:absolute;right:16px;top:16px;background:var(--accent-orange);color:white;padding:8px 12px;border-radius:30px;font-weight:800;font-size:12px;box-shadow:0 8px 20px rgba(230,126,34,0.12)}
+    .course-card h3{margin:0 0 12px;font-size:1.15rem}
+    .features{list-style:none;padding-left:0;margin:0 0 12px}
+    .features li{padding-left:0;margin-bottom:8px;font-weight:600;color:#213043}
+    .price-row{display:flex;align-items:center;gap:8px}
+    .price{font-weight:900;color:var(--primary-blue);font-size:1.05rem}
+    .strike{color:#9aa8b6;text-decoration:line-through;font-weight:700;margin-right:6px}
+
+    /* Trust / testimonials */
+    .trust-grid{display:grid;gap:14px;margin-top:18px}
+    @media(min-width:960px){.trust-grid{grid-template-columns:repeat(3,1fr)}}
+    .trust-box{background:white;padding:16px;border-radius:12px;border:1px solid #eef6fb;box-shadow:var(--shadow-sm)}
+    .trust-box p.small{color:var(--muted);font-size:13px;margin:0}
+
+    /* Payment area */
+    .payment {margin-top:22px;background:linear-gradient(180deg,#ecfdf5,#ffffff);padding:20px;border-radius:14px;border:1px solid #d7f3e6;box-shadow:var(--shadow-md);text-align:center}
+    .qr{width:140px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.12)}
+    .upi {font-weight:900;margin-top:10px}
+    .copy-btn{background:white;border:1px solid rgba(0,0,0,0.06);padding:8px 10px;border-radius:8px;cursor:pointer;margin-left:8px;font-weight:700}
+
+    /* Trainers */
+    .trainers{display:grid;gap:16px;margin-top:22px}
+    @media(min-width:860px){.trainers{grid-template-columns:repeat(2,1fr)}}
+    .trainer-card{background:var(--card);padding:16px;border-radius:12px;border:1px solid #eef3f8;box-shadow:var(--shadow-sm)}
+    .trainer-card h4{margin:0 0 6px;font-weight:800}
+
+    /* FAQ Accordion */
+    .faq{margin-top:20px;border-radius:12px;overflow:hidden;border:1px solid #f0eef6;background:white}
+    .faq-item{border-bottom:1px solid #f2f4f8}
+    .faq-btn{width:100%;background:transparent;border:0;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700;cursor:pointer}
+    .faq-panel{max-height:0;overflow:hidden;padding:0 16px 0 16px;transition:max-height .28s ease}
+    .faq-panel p{margin:12px 0;color:#334155}
+
+    /* footer */
+    footer{margin-top:30px;background:linear-gradient(180deg,#243b55,#2c3e50);color:#dbeafe;padding:30px;border-radius:12px;text-align:center}
+    footer p.small{opacity:.9;margin:6px 0;color:#dbeafe}
+
+    /* Floating whatsapp & sticky mobile CTA */
+    .whatsapp{
+      position:fixed;right:18px;bottom:18px;width:62px;height:62px;border-radius:50%;background:var(--accent-green);display:flex;align-items:center;justify-content:center;z-index:100;box-shadow:0 10px 30px rgba(39,174,96,0.2);cursor:pointer;
+    }
+    .whatsapp svg{width:34px;height:34px;fill:white}
+    .mobile-cta{
+      position:fixed;left:50%;transform:translateX(-50%);bottom:0;z-index:95;width:100%;max-width:920px;padding:12px;background:linear-gradient(90deg,#ffffff,#f7fffa);border-top:1px solid #ebf6ef;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:var(--shadow-md);border-radius:12px 12px 0 0;padding-left:20px;padding-right:20px;
+    }
+    @media(min-width:900px){.mobile-cta{display:none}}
+    .mobile-cta .left{font-weight:800}
+    .mobile-cta .right{display:flex;gap:8px}
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+
+  <!-- Urgency banner -->
+  <div class="urgency" role="status" aria-live="polite">
+    <span class="pulse" aria-hidden="true"></span>
+    Limited Seats — Next ML batch starts soon • <button class="btn btn-ghost" style="margin-left:10px;" id="jumpEnroll">Enroll</button>
+  </div>
+
+  <!-- Header / Hero -->
+  <header>
+    <img src="https://codespeaklearn.com/wp-content/uploads/2025/02/CSL-Logos-e1739614479783.png" alt="CodeSpeakLearn logo" class="logo" id="heroLogo" />
+    <h1>Upskill with CodeSpeakLearn</h1>
+    <p>Master Machine Learning & English Communication — flexible online & offline batches</p>
+
+    <div class="hero-ctas">
+      <button class="btn btn-primary" id="enrollNowMain">Enroll Now — ₹999 / ₹499</button>
+      <a href="https://wa.me/919969648284?text=Hi!%20I%27m%20interested%20in%20the%20course." class="btn btn-ghost" target="_blank" rel="noopener">Chat on WhatsApp</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero-grid" aria-hidden="false">
+      <!-- left column (info) -->
+      <div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;gap:8px;background:white;padding:6px 10px;border-radius:12px;box-shadow:var(--shadow-sm);font-weight:800">
+            🎯 Job-ready projects
           </span>
-          <button onClick={scrollToPayment} className="rounded-full bg-white/15 px-3 py-1 backdrop-blur hover:bg-white/25">
-            Enroll Now
-          </button>
+          <span style="display:inline-flex;align-items:center;gap:8px;background:white;padding:6px 10px;border-radius:12px;box-shadow:var(--shadow-sm);font-weight:800">
+            ✅ Lifetime access
+          </span>
         </div>
+
+        <section class="section" aria-labelledby="coursesHeading">
+          <h2 id="coursesHeading">Choose your program</h2>
+          <p class="lead">Hands-on project work, expert mentorship, and flexible batches for working professionals & students.</p>
+
+          <div class="courses" role="list">
+            <article class="course-card" role="listitem" aria-labelledby="ml-title">
+              <div class="badge" aria-hidden>Limited Seats</div>
+              <h3 id="ml-title">Machine Learning using Python</h3>
+              <ul class="features" aria-describedby="ml-desc">
+                <li>Hands-on with Google Colab</li>
+                <li>Regression, Classification, Deep learning basics</li>
+                <li>40+ hours • lifetime access • industry projects</li>
+                <li>Expert mentors • Resume & interview support</li>
+              </ul>
+              <div class="price-row">
+                <span class="strike">₹1999</span>
+                <span class="price">₹999</span>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary" data-course="ML" onclick="goEnroll('Machine Learning using Python')">Enroll Now</button>
+                <a class="btn btn-ghost" target="_blank" rel="noopener" href="https://wa.me/919969648284?text=I%20want%20details%20for%20the%20ML%20batch.">Ask on WhatsApp</a>
+              </div>
+            </article>
+
+            <article class="course-card" role="listitem" aria-labelledby="eng-title">
+              <div class="badge" style="background:#0ea5e9">10-Day Bootcamp</div>
+              <h3 id="eng-title">English Language Skill Development</h3>
+              <ul class="features" aria-describedby="eng-desc">
+                <li>Interview prep & live communication drills</li>
+                <li>Job emails & application that get replies</li>
+                <li>CV building • Online & offline batches</li>
+              </ul>
+              <div class="price-row">
+                <span class="price">₹499</span>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary" data-course="English" onclick="goEnroll('English Language Skill Development')">Enroll Now</button>
+                <a class="btn btn-ghost" target="_blank" rel="noopener" href="https://wa.me/919969648284?text=I%20want%20details%20for%20the%20English%20bootcamp.">Ask on WhatsApp</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Trust -->
+        <section style="margin-top:18px">
+          <div class="trust-grid">
+            <div class="trust-box">
+              <p class="small">What learners say</p>
+              <p style="margin-top:8px">“Crystal-clear explanations and practical notebooks. I built my first ML model in week one.”</p>
+              <p class="small" style="margin-top:8px">— Priya S., Data Analyst</p>
+            </div>
+            <div class="trust-box">
+              <p class="small">Outcome</p>
+              <p style="margin-top:8px">90%+ learners report greater interview confidence within 2 weeks.</p>
+            </div>
+            <div class="trust-box">
+              <p class="small">Assurance</p>
+              <p style="margin-top:8px">100% support, lifetime access, and mentor guidance throughout.</p>
+            </div>
+          </div>
+        </section>
       </div>
 
-      {/* JSON-LD for SEO */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(90rem_90rem_at_10%_-20%,#d1fae5_0%,transparent_40%),radial-gradient(80rem_80rem_at_110%_10%,#bfdbfe_0%,transparent_35%)]" />
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 pb-8 pt-10 md:grid-cols-2 md:pb-16 lg:gap-12 lg:pt-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <img
-              src={LOGO_SRC}
-              alt="CodeSpeakLearn logo"
-              loading="lazy"
-              className="h-14 w-auto drop-shadow md:h-16"
-            />
-            <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-              Upskill with CodeSpeakLearn
-            </h1>
-            <p className="mt-3 max-w-xl text-base text-slate-600 md:text-lg">
-              Master <strong>Machine Learning</strong> & <strong>English Communication</strong> with flexible online/offline batches.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <button
-                onClick={scrollToPayment}
-                className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:translate-y-[-1px] hover:bg-emerald-700 active:translate-y-[0px]"
-              >
-                Enroll Now — ₹999 / ₹499
-              </button>
-              <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello!%20I%27m%20interested%20in%20the%20course.`}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border border-emerald-200 bg-white px-5 py-3 text-sm font-bold text-emerald-700 shadow-sm hover:border-emerald-300"
-              >
-                Chat on WhatsApp
-              </a>
-            </div>
-            <div className="mt-6 flex items-center gap-4 text-xs text-slate-600 md:text-sm">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3 py-1 shadow-sm">
-                <span className="i" aria-hidden>🎯</span> Job‑ready projects
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/60 px-3 py-1 shadow-sm">
-                <span aria-hidden>✅</span> Lifetime access
-              </span>
-            </div>
-          </motion.div>
-
-          {/* Countdown / card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className=""
-          >
-            <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-6 shadow-xl ring-1 ring-black/5">
-              <p className="text-sm font-semibold text-amber-700">
-                ⏰ New Machine Learning batch countdown
-              </p>
-              <div className="mt-4 grid grid-cols-4 gap-3">
-                {[
-                  { label: "Days", value: d },
-                  { label: "Hrs", value: h },
-                  { label: "Mins", value: m },
-                  { label: "Secs", value: s },
-                ].map((t, i) => (
-                  <div key={i} className="rounded-xl bg-white p-3 text-center shadow">
-                    <div className="text-3xl font-extrabold text-orange-600 tabular-nums md:text-4xl">
-                      {String(t.value).padStart(2, "0")}
-                    </div>
-                    <div className="text-xs font-semibold text-amber-700">{t.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex items-center justify-between text-sm">
-                <span className="font-semibold text-amber-800">Spots left: {spotsLeft}</span>
-                <button onClick={scrollToPayment} className="rounded-lg bg-orange-600 px-4 py-2 font-bold text-white shadow hover:bg-orange-700">
-                  Grab Your Seat
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Courses */}
-      <section id="courses" className="mx-auto max-w-7xl px-4 py-10">
-        <h2 className="text-center text-2xl font-extrabold tracking-tight md:text-3xl">
-          Choose Your Program
-        </h2>
-        <p className="mx-auto mt-2 max-w-2xl text-center text-slate-600">
-          Learn through hands‑on practice, bite‑sized theory, and mentored projects. Flexible timings for students and working professionals.
-        </p>
-
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* ML Card */}
-          <motion.article
-            whileHover={{ y: -4 }}
-            className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-lg"
-          >
-            <div className="absolute right-4 top-4 rounded-full bg-orange-600 px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-white shadow">
-              Limited Seats
-            </div>
-            <h3 className="text-xl font-extrabold text-slate-900">Machine Learning using Python</h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-700">
-              <li>Hands‑on learning with Google Colab</li>
-              <li>Regression, Classification, Unsupervised, Ensembles</li>
-              <li>40+ hours • lifetime access • industry projects</li>
-              <li>30+ exercises • expert mentor support</li>
-              <li>Ideal for graduates & working pros</li>
-            </ul>
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
-              <span className="rounded-lg bg-emerald-50 px-2.5 py-1 font-bold text-emerald-700">₹999</span>
-              <span className="text-slate-500">Mon–Fri • 5–6:30pm / 7–8:30pm • 1.5 months (50 hrs)</span>
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button onClick={scrollToPayment} className="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white shadow hover:bg-emerald-700">
-                Enroll Now
-              </button>
-              <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}?text=I%20want%20details%20for%20the%20ML%20batch.`}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border border-emerald-200 bg-white px-4 py-2 font-bold text-emerald-700 hover:border-emerald-300"
-              >
-                Ask on WhatsApp
-              </a>
-            </div>
-          </motion.article>
-
-          {/* English Card */}
-          <motion.article whileHover={{ y: -4 }} className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
-            <div className="absolute right-4 top-4 rounded-full bg-sky-600 px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-white shadow">
-              10‑Day Bootcamp
-            </div>
-            <h3 className="text-xl font-extrabold text-slate-900">English Language Skill Development</h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-700">
-              <li>Interview preparation & live communication drills</li>
-              <li>Job emails & applications that get replies</li>
-              <li>CV/Resume building for all levels</li>
-              <li>Online & offline batches • flexible schedules</li>
-              <li>Career boost in just 10 days</li>
-            </ul>
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
-              <span className="rounded-lg bg-sky-50 px-2.5 py-1 font-bold text-sky-700">₹499</span>
-              <span className="text-slate-500">Customizable schedule • Beginner‑friendly</span>
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button onClick={scrollToPayment} className="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white shadow hover:bg-emerald-700">
-                Enroll Now
-              </button>
-              <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}?text=I%20want%20details%20for%20the%20English%20bootcamp.`}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border border-emerald-200 bg-white px-4 py-2 font-bold text-emerald-700 hover:border-emerald-300"
-              >
-                Ask on WhatsApp
-              </a>
-            </div>
-          </motion.article>
-        </div>
-      </section>
-
-      {/* Trust / Testimonials */}
-      <section className="mx-auto max-w-7xl px-4 pb-6 pt-2">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow">
-            <p className="text-sm font-semibold text-slate-600">What learners say</p>
-            <p className="mt-2 text-slate-700">
-              “Crystal‑clear explanations and practical notebooks. I built my first ML model in week one.”
-            </p>
-            <p className="mt-2 text-xs text-slate-500">— Priya S., Data Analyst</p>
+      <!-- right column (countdown/payment card) -->
+      <aside>
+        <div class="count-card" role="region" aria-label="Course countdown and registration">
+          <div class="count-title">⏰ New Machine Learning batch starts in...</div>
+          <div class="timer" id="timer">
+            <div class="unit"><div class="number" id="days">00</div><div class="label">Days</div></div>
+            <div class="unit"><div class="number" id="hours">00</div><div class="label">Hrs</div></div>
+            <div class="unit"><div class="number" id="minutes">00</div><div class="label">Mins</div></div>
+            <div class="unit"><div class="number" id="seconds">00</div><div class="label">Secs</div></div>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow">
-            <p className="text-sm font-semibold text-slate-600">Outcome</p>
-            <p className="mt-2 text-slate-700">90%+ learners report greater interview confidence within 2 weeks.</p>
+
+          <div class="spot-row" style="margin-top:14px">
+            <div class="spot-left">Spots left: <span id="spots">19</span></div>
+            <button class="grab-btn" id="grabSeat">Grab Your Seat</button>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow">
-            <p className="text-sm font-semibold text-slate-600">Assurance</p>
-            <p className="mt-2 text-slate-700">100% support, lifetime access, and mentor guidance throughout.</p>
+
+          <div style="margin-top:14px;text-align:center">
+            <small class="muted">Limited seats — confirm with payment & WhatsApp screenshot</small>
           </div>
         </div>
-      </section>
 
-      {/* Payment */}
-      <section id="payment" className="relative mx-auto max-w-4xl px-4 py-10">
-        <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-xl">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Secure Your Seat</h2>
-            <p className="text-slate-600">Pay via UPI (scan QR) or use UPI ID below, then WhatsApp your screenshot to confirm.</p>
-            <img
-              src={QR_SRC}
-              alt="UPI QR Code"
-              loading="lazy"
-              className="mt-4 h-auto w-40 rounded-xl shadow-lg transition hover:scale-105"
-            />
-            <p className="mt-3 text-sm font-bold text-slate-900">
-              Or pay with UPI: <span className="rounded bg-white px-2 py-1">{UPI_ID}</span>
-            </p>
-            <div className="mt-4 grid w-full grid-cols-1 gap-3 text-sm md:grid-cols-2">
-              <div className="rounded-xl bg-white p-4 shadow-sm">
-                <p className="font-semibold">Machine Learning Course</p>
-                <p className="text-emerald-700">₹999 only</p>
-              </div>
-              <div className="rounded-xl bg-white p-4 shadow-sm">
-                <p className="font-semibold">English Language Course</p>
-                <p className="text-emerald-700">₹499 only</p>
-              </div>
+        <!-- Payment card -->
+        <div class="payment" style="margin-top:16px" id="payment">
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div style="display:flex;align-items:center;gap:10px">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="#2c3e50" aria-hidden><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM9 17.5L4 12.5l1.41-1.41L9 14.6l7.59-7.59L18 8l-9 9.5z"/></svg>
+              <h3 style="margin:0">Secure Your Seat</h3>
             </div>
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi!%20I%27ve%20completed%20the%20payment%20and%20I%27m%20sending%20the%20screenshot%20to%20register.`}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700"
-            >
-              Share Screenshot on WhatsApp
-            </a>
-          </div>
-        </div>
-      </section>
 
-      {/* Trainers */}
-      <section className="mx-auto max-w-6xl px-4 py-8">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow">
-          <h2 className="text-center text-2xl font-extrabold tracking-tight md:text-3xl">Meet Our Expert Trainers</h2>
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-5">
-              <h3 className="border-b-2 border-emerald-200 pb-2 text-lg font-extrabold">Machine Learning & AI Trainer</h3>
-              <p className="mt-3 text-sm text-slate-700">
-                Industry veteran (15+ yrs) in AI, Data Science & Python. Led corporate and institutional trainings. Practical, project‑first approach for job‑ready skills.
-              </p>
+            <img class="qr" id="qrImg" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiHYEbkdgFpsFFdopKQxZd3JOAxI6uhYiQUk_AhgjZUDiv3oHqIrwHGGgRsoi-KGaowGHMtj20OQ3HtkKfXJbsFqZTFXajfNyd_wy9Rb99mFjX-yECSGhePh1MNrz8k25nFt_o1IyMw48ORD0TjHPoarz0TFparWykSgUN1GhrZdwbvTlPAppF83yhI_OBq/s16000/WhatsApp%20Image%202025-09-04%20at%2012.58.39.jpeg" alt="UPI QR code" loading="lazy">
+
+            <div class="upi" style="margin-top:10px">UPI: <span id="upiId" style="background:white;padding:6px 10px;border-radius:8px;display:inline-block">anuppendse@oksbi</span>
+              <button class="copy-btn" id="copyUpi">Copy</button>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-5">
-              <h3 className="border-b-2 border-emerald-200 pb-2 text-lg font-extrabold">English Language & Communication Trainer</h3>
-              <p className="mt-3 text-sm text-slate-700">
-                Seasoned communication expert with interview coaching & workplace English specialization. Personalized attention and measurable outcomes.
-              </p>
+
+            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center">
+              <button class="btn btn-primary" id="payNow">Share Screenshot on WhatsApp</button>
+              <a class="btn btn-ghost" href="mailto:contact@codespeaklearn.com">Email Us</a>
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:10px;width:100%;justify-content:center">
+              <div style="background:white;padding:10px;border-radius:10px"><strong>ML:</strong><div style="color:var(--accent-green);font-weight:900">₹999</div></div>
+              <div style="background:white;padding:10px;border-radius:10px"><strong>English:</strong><div style="color:var(--accent-green);font-weight:900">₹499</div></div>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="mx-auto max-w-5xl px-4 pb-16">
-        <h2 className="text-center text-2xl font-extrabold tracking-tight md:text-3xl">Frequently Asked Questions</h2>
-        <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
-          {faqs.map((item, idx) => (
-            <FAQRow key={idx} q={item.q} a={item.a} />
-          ))}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 px-4 py-10 text-slate-200">
-        <div className="mx-auto max-w-6xl text-center">
-          <h3 className="text-2xl font-bold">Ready to Elevate Your Skills?</h3>
-          <p className="mx-auto mt-2 max-w-2xl text-slate-400">
-            Join our community of learners and start your journey today.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello!%20I%20saw%20your%20website%20and%20have%20a%20question.`}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full bg-white px-5 py-3 font-bold text-slate-900 shadow hover:translate-y-[-1px]"
-            >
-              Chat on WhatsApp
-            </a>
-            <a
-              href="mailto:contact@codespeaklearn.com"
-              className="rounded-full border border-slate-700 px-5 py-3 font-bold text-white hover:bg-slate-800"
-            >
-              Email Us
-            </a>
-          </div>
-          <div className="mt-6 text-sm text-slate-400">
-            <p>C1-501, Aldea Espanola, Phase 3, Opp Orchid Hotel, Baner-Mahanulge Rd, Deolali, Pune 411045</p>
-            <p>
-              Website: <a className="underline" href="https://www.codespeaklearn.com" target="_blank" rel="noreferrer">www.codespeaklearn.com</a>
-            </p>
-            <p className="mt-1">© 2025 CodeSpeakLearn. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Sticky mobile CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-3xl border-t border-emerald-200 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur md:hidden">
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-sm">
-            <div className="font-extrabold text-slate-900">Enroll Now</div>
-            <div className="text-slate-600">ML ₹999 • English ₹499</div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={scrollToPayment} className="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white shadow hover:bg-emerald-700">
-              Pay
-            </button>
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=I%20have%20a%20question%20before%20enrolling.`}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-xl border border-emerald-200 bg-white px-4 py-2 font-bold text-emerald-700 hover:border-emerald-300"
-            >
-              Ask
-            </a>
-          </div>
-        </div>
-      </div>
+      </aside>
     </div>
-  );
+
+    <!-- Trainers -->
+    <section class="trainers" aria-labelledby="trainersHeading">
+      <h2 id="trainersHeading" style="margin-top:22px">Meet Our Expert Trainers</h2>
+      <div class="trainers" style="margin-top:12px">
+        <div class="trainer-card"><h4>Machine Learning & AI Trainer</h4><p style="margin-top:8px;color:#334155">Industry veteran with 15+ years experience in AI, Data Science & Python. Practical, project-first approach to make you job-ready.</p></div>
+        <div class="trainer-card"><h4>English Language & Communication Trainer</h4><p style="margin-top:8px;color:#334155">Seasoned communication expert with interview coaching & workplace English specialization. Personalized attention and measurable outcomes.</p></div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section style="margin-top:22px">
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq" id="faqList" aria-live="polite">
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">Where is your institute located? <span class="sr-only">toggle answer</span><span>+</span></button>
+          <div class="faq-panel"><p>Our institute is located in Deolali, Maharashtra, India at C1-501, Aldea Espanola, Phase 3, Opposite Orchid Hotel, Baner-Mahanulge Road, Pune 411045.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">What is the detailed syllabus of the Machine Learning course? <span>+</span></button>
+          <div class="faq-panel"><p>The syllabus covers Intro to ML, Supervised Learning, Regression, Classification, Unsupervised Learning, Ensemble Methods, Recommender Systems and practical projects using Python & Google Colab.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">Is prior programming knowledge required? <span>+</span></button>
+          <div class="faq-panel"><p>Basic programming & maths preferred, but beginners receive full support.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">Are batches online or offline? <span>+</span></button>
+          <div class="faq-panel"><p>We offer both — flexible, customizable schedules to fit your needs.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-btn" aria-expanded="false">How do I complete my registration? <span>+</span></button>
+          <div class="faq-panel"><p>Pay via UPI/QR code, send payment screenshot on WhatsApp to confirm registration and receive joining details.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="margin-top:28px">
+      <h3 style="margin:0;font-family:'Montserrat',sans-serif">Ready to Elevate Your Skills?</h3>
+      <p class="small">Join our community of learners and start your journey towards a better future today.</p>
+      <p class="small" style="margin-top:10px">C1-501, Aldea Espanola, Phase 3, Opposite Orchid Hotel, Baner-Mahanulge Road, Deolali, Pune 411045</p>
+      <p class="small">Website: <a href="https://www.codespeaklearn.com" style="color:#dbeafe;text-decoration:underline">www.codespeaklearn.com</a></p>
+      <p style="margin-top:12px;font-size:12px;opacity:0.9">© 2025 CodeSpeakLearn. All rights reserved.</p>
+    </footer>
+  </main>
+
+  <!-- mobile sticky CTA -->
+  <div class="mobile-cta" role="region" aria-label="Mobile call to action">
+    <div class="left">
+      Enroll Now • ML ₹999 • English ₹499
+    </div>
+    <div class="right">
+      <button class="btn btn-primary" onclick="goEnroll('Quick')">Pay</button>
+      <a class="btn btn-ghost" href="https://wa.me/919969648284?text=I%20have%20a%20question%20before%20enrolling." target="_blank" rel="noopener">Ask</a>
+    </div>
+  </div>
+
+  <!-- Floating WhatsApp button -->
+  <a class="whatsapp" href="https://wa.me/919969648284?text=Hi!%20I%27m%20interested%20in%20the%20course." target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M20.52 3.47A11.974 11.974 0 0012.01 0c-6.63.03-12 5.43-12 12.13a11.952 11.952 0 001.67 6.06l-1.77 6.5 6.68-1.73a11.964 11.964 0 005.44 1.3c6.65 0 12.04-5.4 12.05-12.07a11.982 11.982 0 00-5.44-10.73zM12.01 21.43a9.284 9.284 0 01-4.73-1.43l-.34-.21-3.98 1.03 1.06-3.69-.22-.37a9.229 9.229 0 01-1.52-5.1c0-5.09 4.14-9.22 9.24-9.22a9.273 9.273 0 016.54 2.71 9.3 9.3 0 012.7 6.5c-.02 5.1-4.17 9.28-9.22 9.28zm5.1-7.19c-.28-.14-1.65-.81-1.91-.9-.26-.1-.44-.14-.63.14s-.72.9-.88 1.08c-.16.18-.32.21-.6.07a7.57 7.57 0 01-2.23-1.38 8.46 8.46 0 01-1.57-1.94c-.14-.25-.02-.38.12-.52.13-.13.28-.33.42-.5a.362.362 0 00.05-.62c-.18-.17-.63-1.48-.87-2.06-.23-.55-.47-.48-.63-.49-.16 0-.34-.01-.52-.01a.873.873 0 00-.63.3 2.59 2.59 0 00-.8.91 3.19 3.19 0 00-1.21 2.03c0 1.2.66 2.36.75 2.53.1.18 1.31 2 3.18 2.8 1.22.53 2.17.46 2.97.36.47-.07 1.44-.58 1.65-1.14.21-.56.21-1.04.15-1.14-.06-.1-.24-.16-.52-.3z"/>
+    </svg>
+  </a>
+
+<script>
+/* ========== CONFIG ========== */
+const WHATSAPP_NUMBER = '919969648284'; // change if needed (country code included)
+const UPI_ID = 'anuppendse@oksbi';
+const LOGO_SRC = document.getElementById('heroLogo').src || '';
+const QR_SRC = document.getElementById('qrImg').src || '';
+
+/* ========== Countdown logic (auto-roll if passed) ========== */
+// announced batch: 15 Sep 2025, 17:00 IST (which is 11:30 UTC)
+function getNextBatchDate(){
+  const announced = new Date('2025-09-15T11:30:00Z');
+  let now = new Date();
+  if (announced > now) return announced;
+  // roll every 14 days
+  let base = new Date(now);
+  // set to 17:00 IST -> 11:30 UTC
+  base = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate(), 11, 30, 0));
+  while (base <= now){
+    base.setUTCDate(base.getUTCDate() + 14);
+  }
+  return base;
 }
 
-function FAQRow({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    if (open) ref.current.style.maxHeight = ref.current.scrollHeight + "px";
-    else ref.current.style.maxHeight = "0px";
-  }, [open]);
+let targetDate = getNextBatchDate();
 
-  return (
-    <div className="group">
-      <button
-        className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span>{q}</span>
-        <span className={`grid h-6 w-6 place-items-center rounded-full border text-xs transition ${open ? "rotate-45 bg-slate-900 text-white" : "bg-white"}`}>
-          +
-        </span>
-      </button>
-      <div
-        ref={ref}
-        className="overflow-hidden px-4 transition-all duration-300 ease-in-out"
-        role="region"
-        aria-hidden={!open}
-      >
-        <p className="pb-4 text-sm text-slate-700">{a}</p>
-      </div>
-    </div>
-  );
+function updateCountdown(){
+  const now = Date.now();
+  const distance = targetDate.getTime() - now;
+  if (distance <= 0){
+    // if passed, recompute
+    targetDate = getNextBatchDate();
+    return;
+  }
+  const days = Math.floor(distance / (1000*60*60*24));
+  const hours = Math.floor((distance % (1000*60*60*24)) / (1000*60*60));
+  const minutes = Math.floor((distance % (1000*60*60)) / (1000*60));
+  const seconds = Math.floor((distance % (1000*60)) / 1000);
+
+  document.getElementById('days').textContent = String(days).padStart(2,'0');
+  document.getElementById('hours').textContent = String(hours).padStart(2,'0');
+  document.getElementById('minutes').textContent = String(minutes).padStart(2,'0');
+  document.getElementById('seconds').textContent = String(seconds).padStart(2,'0');
 }
+updateCountdown();
+const countdownInterval = setInterval(updateCountdown, 1000);
+
+/* ========== Spots left simulation ========== */
+const spotsEl = document.getElementById('spots');
+let spotsLeft = 19;
+spotsEl.textContent = spotsLeft;
+const spotsTicker = setInterval(()=>{
+  if (spotsLeft > 7){
+    spotsLeft = spotsLeft - 1;
+    spotsEl.textContent = spotsLeft;
+  } else {
+    clearInterval(spotsTicker);
+  }
+}, 15000);
+
+/* ========== Buttons behavior ========== */
+function goEnroll(course){
+  // scroll to payment and prefill message
+  document.getElementById('payment').scrollIntoView({behavior:'smooth',block:'center'});
+  const message = encodeURIComponent(`Hi! I have completed payment for ${course}. Sharing screenshot to register. UPI: ${UPI_ID}`);
+  const wa = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+  // small delay to let user see payment area, then open wa in new tab
+  setTimeout(()=> window.open(wa,'_blank'),900);
+}
+
+// main enroll
+document.getElementById('enrollNowMain').addEventListener('click', ()=> goEnroll('Machine Learning / English') );
+document.getElementById('grabSeat').addEventListener('click', ()=> goEnroll('Machine Learning') );
+document.getElementById('jumpEnroll').addEventListener('click', ()=> document.getElementById('payment').scrollIntoView({behavior:'smooth'}));
+document.getElementById('payNow').addEventListener('click', ()=>{
+  const message = encodeURIComponent(`Hi! I've completed the payment. Sending screenshot to register. UPI: ${UPI_ID}`);
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,'_blank');
+});
+
+/* ========== Copy UPI ========== */
+document.getElementById('copyUpi').addEventListener('click', async ()=>{
+  try{
+    await navigator.clipboard.writeText(UPI_ID);
+    const btn = document.getElementById('copyUpi');
+    const old = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(()=> btn.textContent = old, 1800);
+  }catch(e){
+    alert('Copy failed. UPI: ' + UPI_ID);
+  }
+});
+
+/* ========== FAQ accordion (keyboard accessible) ========== */
+document.querySelectorAll('.faq-btn').forEach(btn=>{
+  btn.addEventListener('click', () => {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    // close others
+    document.querySelectorAll('.faq-btn').forEach(b=>{
+      b.setAttribute('aria-expanded','false');
+      b.nextElementSibling.style.maxHeight = 0;
+    });
+    if (!expanded){
+      btn.setAttribute('aria-expanded','true');
+      const panel = btn.nextElementSibling;
+      panel.style.maxHeight = panel.scrollHeight + 'px';
+    }
+  });
+  btn.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      btn.click();
+    }
+  });
+});
+
+/* ========== Insert JSON-LD (SEO) ========== */
+(function addJsonLd(){
+  const courseJson = {
+    "@context":"https://schema.org",
+    "@type":"Course",
+    "name":"Machine Learning using Python",
+    "description":"Hands-on ML with Python & Google Colab. Supervised/Unsupervised learning, Deep Learning overview, projects, interview prep.",
+    "provider":{ "@type":"Organization","name":"CodeSpeakLearn","sameAs":"https://www.codespeaklearn.com" },
+    "hasCourseInstance":{
+      "@type":"CourseInstance",
+      "name":"ML Batch",
+      "startDate": targetDate.toISOString(),
+      "location":{"@type":"Place","name":"CodeSpeakLearn Pune","address":"C1-501, Aldea Espanola, Phase 3, Opp Orchid Hotel, Baner-Mahanulge Road, Pune 411045"},
+      "offers":{"@type":"Offer","price":"999","priceCurrency":"INR","availability":"https://schema.org/LimitedAvailability"}
+    }
+  };
+  const s = document.createElement('script');
+  s.type = 'application/ld+json';
+  s.text = JSON.stringify(courseJson);
+  document.head.appendChild(s);
+})();
+
+/* ========== Keyboard focus for skip links (optional) ========== */
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'Escape') window.scrollTo({top:0,behavior:'smooth'});
+});
+</script>
+</body>
+</html>
